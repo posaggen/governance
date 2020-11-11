@@ -1,0 +1,21 @@
+{
+  "name": "voting",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "contract_prettier": "prettier --write contracts/*.sol",
+    "prettier": "prettier --single-quote --trailing-comma all --write \"src/*.js\""
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@openzeppelin/contracts": "2.4.0",
+    "bignumber.js": "^9.0.1",
+    "commander": "^6.2.0",
+    "fs": "0.0.1-security",
+    "js-conflux-sdk": "0.13.5",
+    "prettier": "^2.1.2",
+    "prettier-plugin-solidity": "^1.0.0-alpha.59"
+  }
+}
