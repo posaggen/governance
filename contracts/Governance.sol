@@ -29,6 +29,8 @@ contract Governance is WhitelistedRole {
         string[] options;
         uint256[] optionVotes;
         string status;
+        address proposer;
+        uint256 proposalId;
     }
 
     // proposal
@@ -86,17 +88,20 @@ contract Governance is WhitelistedRole {
         return block.number;
     }
 
-    function summarizeProposal(Proposal storage proposal)
+    function summarizeProposal(uint256 idx)
         internal
         view
         returns (ProposalAbstract memory)
     {
+        Proposal storage proposal = proposals[idx];
         ProposalAbstract memory res;
         res.title = proposal.title;
         res.discussion = proposal.discussion;
         res.deadline = proposal.deadline;
         res.options = proposal.options;
         res.optionVotes = proposal.optionVotes;
+        res.proposer = proposal.proposer;
+        res.proposalId = idx;
         if (res.deadline < block.number) {
             res.status = "Closed";
         } else {
@@ -125,7 +130,7 @@ contract Governance is WhitelistedRole {
         returns (ProposalAbstract memory)
     {
         require(proposalId < proposalCnt, "invalid proposal ID");
-        return summarizeProposal(proposals[proposalId]);
+        return summarizeProposal(proposalId);
     }
 
     function getProposalList(uint256 offset, uint256 cnt)
@@ -139,7 +144,7 @@ contract Governance is WhitelistedRole {
         if (cnt > i + 1) cnt = i + 1;
         ProposalAbstract[] memory res = new ProposalAbstract[](cnt);
         for (uint256 k = 0; k < cnt; ++k) {
-            res[k] = summarizeProposal(proposals[i - k]);
+            res[k] = summarizeProposal(i - k);
         }
         return res;
     }

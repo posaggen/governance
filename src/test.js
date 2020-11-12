@@ -23,7 +23,7 @@ let staking = cfx.Contract({
 let owner;
 let owner_addr;
 let price = '1';
-let gov_addr = '0x8d29d9c6e31434a93bb8d004f70d965250f4cad4';
+let gov_addr = '0x853ff49da93dea011ee179ef1608326e4742bd2a';
 let gov;
 if (gov_addr !== '') {
   gov = cfx.Contract({
@@ -159,6 +159,8 @@ function print(p) {
   console.log(p[3]);
   console.log(p[4].map((x) => String(x)));
   console.log(p[5]);
+  console.log(p[6]);
+  console.log(p[7]);
   console.log("");
 }
 
