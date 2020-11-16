@@ -172,7 +172,7 @@ contract Governance is WhitelistedRole {
             );
         }
 
-        uint256 votePower = STAKING.getVotePower(msg.sender, proposal.deadline);
+        uint256 votePower = STAKING.getVotePower(msg.sender, block.number);
         proposal.votedOption[msg.sender] = optionId;
         proposal.votedPower[msg.sender] = votePower;
         proposal.optionVotes[optionId] = proposal.optionVotes[optionId].add(
