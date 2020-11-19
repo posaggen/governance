@@ -1,0 +1,7 @@
+{
+	"title": "Proposal A",
+	"discussion": "Discussion url of proposal A",
+	"deadline": 1206686,
+	"options": ["option #1", "option #2"],
+	"proposer": "0x1d9fdbe7cad3d82cc539b3b7c8bd8a8437ad5b58"
+}
