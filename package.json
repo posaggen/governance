@@ -14,7 +14,7 @@
     "bignumber.js": "^9.0.1",
     "commander": "^6.2.0",
     "fs": "0.0.1-security",
-    "js-conflux-sdk": "0.13.5",
+    "js-conflux-sdk": "1.5.11",
     "prettier": "^2.1.2",
     "prettier-plugin-solidity": "^1.0.0-alpha.59"
   }

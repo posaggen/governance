@@ -4,11 +4,10 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/access/roles/WhitelistedRole.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
-import "./AdminControl.sol";
-import "./SponsorWhitelistControl.sol";
 import "./Staking.sol";
+import "./InternalContracts/InternalContractsHandler.sol";
 
-contract Governance is WhitelistedRole {
+contract Governance is WhitelistedRole, InternalContractsHandler {
     using SafeMath for uint256;
 
     struct Proposal {
@@ -38,17 +37,12 @@ contract Governance is WhitelistedRole {
     uint256 public proposalCnt;
     Proposal[] public proposals;
 
-    // internal contracts
-    SponsorWhitelistControl public constant SPONSOR = SponsorWhitelistControl(
-        address(0x0888000000000000000000000000000000000001)
-    );
+    // extend delay
+    uint256 public extendDelay;
 
+    // internal contracts
     Staking public constant STAKING = Staking(
         address(0x0888000000000000000000000000000000000002)
-    );
-
-    AdminControl public constant adminControl = AdminControl(
-        address(0x0888000000000000000000000000000000000000)
     );
 
     event Proposed(
@@ -69,17 +63,8 @@ contract Governance is WhitelistedRole {
         uint256 withdrawAmount
     );
 
-    constructor() public {
-        // remove contract admin
-        adminControl.setAdmin(address(this), address(0));
-        require(
-            adminControl.getAdmin(address(this)) == address(0),
-            "require admin == null"
-        );
-        // cfx sponsor
-        address[] memory users = new address[](1);
-        users[0] = address(0);
-        SPONSOR.addPrivilege(users);
+    constructor(uint256 _extendDelay) public {
+        extendDelay = _extendDelay;
         // add whitelist
         _addWhitelisted(msg.sender);
     }
@@ -153,11 +138,27 @@ contract Governance is WhitelistedRole {
         nextProposer = proposer;
     }
 
+    function getWinner(uint256 proposalId) public view returns (uint256) {
+        Proposal storage proposal = proposals[proposalId];
+        uint256 winner = proposal.optionVotes.length;
+        uint256 winnerVoted = 0;
+        for (uint256 i = 0; i < proposal.optionVotes.length; ++i)
+            if (proposal.optionVotes[i] > winnerVoted) {
+                winnerVoted = proposal.optionVotes[i];
+                winner = i;
+            } else if (proposal.optionVotes[i] == winnerVoted) {
+                winner = proposal.optionVotes.length;
+            }
+        return winner;
+    }
+
     function vote(uint256 proposalId, uint256 optionId) public {
         require(proposalId < proposalCnt, "invalid proposal ID");
         Proposal storage proposal = proposals[proposalId];
         require(proposal.deadline >= block.number, "the proposal has finished");
         require(optionId < proposal.options.length, "invalid option ID");
+
+        uint256 lastWinner = getWinner(proposalId);
 
         uint256 lastVotedPower = proposal.votedPower[msg.sender];
         if (lastVotedPower > 0) {
@@ -179,6 +180,14 @@ contract Governance is WhitelistedRole {
             votePower
         );
         emit Voted(proposalId, msg.sender, optionId, votePower);
+
+        uint256 newWinner = getWinner(proposalId);
+        if (
+            newWinner != lastWinner &&
+            block.number.add(extendDelay) > proposal.deadline
+        ) {
+            proposal.deadline = block.number.add(extendDelay);
+        }
     }
 
     function _submit(
@@ -222,5 +231,22 @@ contract Governance is WhitelistedRole {
         address proposer
     ) public onlyWhitelisted {
         _submit(title, discussion, deadline, options, proposer);
+    }
+
+    function submitHistoryProposalByWhitelist(
+        string memory title,
+        string memory discussion,
+        uint256 deadline,
+        string[] memory options,
+        uint256[] memory optionVotes,
+        address proposer
+    ) public onlyWhitelistAdmin {
+        require(deadline < block.number, "history proposal is not closed");
+        _submit(title, discussion, deadline, options, proposer);
+        proposals[proposals.length - 1].optionVotes = optionVotes;
+    }
+
+    function setExtendDelay(uint256 _extendDelay) public onlyWhitelistAdmin {
+        extendDelay = _extendDelay;
     }
 }
